@@ -14,3 +14,10 @@ script:
 
 after_success:
   - coveralls
+
+deploy:
+  provider: script
+  script: bash etc/pythonanywhere/reload.sh
+  on:
+    branch: master
+    python: 3.6
