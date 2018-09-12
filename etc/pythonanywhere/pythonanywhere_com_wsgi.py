@@ -31,12 +31,30 @@ To deploy:
 """
 import os
 import subprocess
+import shutil
 import sys
 
 home = os.path.expanduser("~")
 path = os.environ.get('FLASGGER_HOME') or home + '/flasgger'
+venv_path = home + '/.virtualenvs/flasgger'
 
-subprocess.check_call(['git', 'pull', path])
+for key, value in os.environ.items():
+    print(key + ':' + value)
+
+# git fetch, reset and clean, or clone first-time
+if os.path.isdir(path):
+    subprocess.check_call(['git', 'fetch'], cwd=path)
+    subprocess.check_call(['git', 'reset', '--hard'], cwd=path)
+    subprocess.check_call(['git', 'clean', '-dxf'], cwd=path)
+else:
+    subprocess.check_call(['git', 'clone', 'https://github.com/rochacbruno/flasgger.git'], cwd=home)
+
+# clean-up and rebuild virtualenv
+#if os.path.isdir(venv_path):
+    #shutil.rmtree(venv_path)
+
+#subprocess.check_call(['mkvirtualenv', 'flasgger', '--python=/usr/bin/python3.6'], cwd=home)
+#subprocess.check_call(['./requirements.sh'])
 
 if path not in sys.path:
     sys.path.append(path)
