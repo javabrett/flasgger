@@ -15,8 +15,7 @@ To deploy:
   ... or use another fork.
 - cd ~/flasgger, then change to whichever branch you want to use.
 - Create a new virtual environment:
-      mkvirtualenv --python=python3.6
-- Run: pip3 install -r requirements.txt -r requirements-dev.txt
+      mkvirtualenv flasgger --python=python3.6
 - cd /var/www
 - rm ${USERNAME}_pythonanywhere_com_wsgi.py
 - ln -s ~/flasgger/etc/pythonanywhere/pythonanywhere_com_wsgi.py ${USERNAME}_pythonanywhere_com_wsgi.py
@@ -35,28 +34,29 @@ import shutil
 import sys
 
 home = os.path.expanduser("~")
-path = os.environ.get('FLASGGER_HOME') or home + '/flasgger'
-venv_path = home + '/.virtualenvs/flasgger'
+flasgger_home = os.environ.get('FLASGGER_HOME') or home + '/flasgger'
 
-for key, value in os.environ.items():
-    print(key + ':' + value)
+#for key, value in os.environ.items():
+    #print(key + ':' + value)
 
 # git fetch, reset and clean, or clone first-time
-if os.path.isdir(path):
-    subprocess.check_call(['git', 'fetch'], cwd=path)
-    subprocess.check_call(['git', 'reset', '--hard'], cwd=path)
-    subprocess.check_call(['git', 'clean', '-dxf'], cwd=path)
+if os.path.isdir(flasgger_home):
+    subprocess.check_call(['git', 'fetch'], cwd=flasgger_home)
+    subprocess.check_call(['git', 'reset', '--hard'], cwd=flasgger_home)
+    subprocess.check_call(['git', 'clean', '-dxf'], cwd=flasgger_home)
 else:
     subprocess.check_call(['git', 'clone', 'https://github.com/rochacbruno/flasgger.git'], cwd=home)
 
-# clean-up and rebuild virtualenv
-#if os.path.isdir(venv_path):
-    #shutil.rmtree(venv_path)
+# the wsgi script does not have the flasgger venv activated
+env = os.environ.copy()
+venv_path = home + '/.virtualenvs/flasgger'
+env['VIRTUAL_ENV'] = venv_path
+env['PATH'] = venv_path + '/bin:' + env['PATH']
+print('pip3 PATH: ' + env['PATH'])
 
-#subprocess.check_call(['mkvirtualenv', 'flasgger', '--python=/usr/bin/python3.6'], cwd=home)
-#subprocess.check_call(['./requirements.sh'])
+subprocess.check_call(['pip3', 'install', '-r', 'requirements.txt', '-r', 'requirements-dev.txt'], cwd=flasgger_home, env=env)
 
-if path not in sys.path:
-    sys.path.append(path)
+if flasgger_home not in sys.path:
+    sys.path.append(flasgger_home)
 
 from demo_app.app import application
